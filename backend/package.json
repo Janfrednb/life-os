@@ -5,6 +5,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "build:prod": "prisma generate --schema=prisma/schema.prod.prisma && tsc",
+    "vercel-build": "prisma generate --schema=prisma/schema.prod.prisma",
     "start": "node dist/server.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",

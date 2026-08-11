@@ -1,10 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { getMoodSuggestion } from '../services/moodSuggestion';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // GET /api/mood/suggestion — devuelve sugerencia basada en moods recientes
 router.get('/suggestion', authenticate, async (req: AuthRequest, res) => {
