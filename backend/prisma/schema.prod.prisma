@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  entries   Entry[]
+  habits    Habit[]
+}
+
+model Entry {
+  id        String   @id @default(cuid())
+  type      String
+  content   String
+  metadata  String?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, type, createdAt])
+}
+
+model Habit {
+  id            String            @id @default(cuid())
+  name          String
+  targetPerWeek Int               @default(7)
+  createdAt     DateTime          @default(now())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  completions   HabitCompletion[]
+}
+
+model HabitCompletion {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id])
+
+  @@unique([habitId, date])
+}
