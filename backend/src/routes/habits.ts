@@ -4,22 +4,26 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+function parseLocalDate(localDate?: string): Date {
+  if (localDate && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+    return new Date(localDate + 'T00:00:00.000Z');
+  }
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
 function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
 function endOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }
 
 // Lista todos los hábitos con estado de completado hoy y racha actual
 router.get('/', authenticate, async (req: AuthRequest, res) => {
   try {
-    const today = new Date();
+    const today = parseLocalDate(req.query.localDate as string | undefined);
     const habits = await prisma.habit.findMany({
       where: { userId: req.userId! },
       include: {
@@ -32,17 +36,12 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
     });
 
     const result = habits.map((h) => {
-      const todayStart = startOfDay(today);
-      const todayEnd = endOfDay(today);
       const completedToday = h.completions.some(
-        (c) => c.date >= todayStart && c.date <= todayEnd,
+        (c) => c.date >= startOfDay(today) && c.date <= endOfDay(today),
       );
-
-      // Calcula racha actual: días consecutivos hacia atrás con al menos 1 completado
       const dates = h.completions.map((c) => c.date);
-      const streak = calcStreak(dates);
+      const streak = calcStreak(dates, today);
       const maxStreak = calcMaxStreak(dates);
-
       return { ...h, completedToday, streak, maxStreak };
     });
 
@@ -52,15 +51,14 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-function calcStreak(dates: Date[]): number {
+function calcStreak(dates: Date[], today: Date): number {
   if (dates.length === 0) return 0;
   const days = new Set(dates.map((d) => startOfDay(d).getTime()));
   let streak = 0;
-  const check = new Date();
-  check.setHours(0, 0, 0, 0);
+  const check = new Date(startOfDay(today));
   while (days.has(check.getTime())) {
     streak++;
-    check.setDate(check.getDate() - 1);
+    check.setUTCDate(check.getUTCDate() - 1);
   }
   return streak;
 }
@@ -85,20 +83,13 @@ function calcMaxStreak(dates: Date[]): number {
 router.post('/', authenticate, async (req: AuthRequest, res) => {
   try {
     const { name, targetPerWeek } = req.body;
-
     if (!name) {
       res.status(400).json({ error: 'name es requerido' });
       return;
     }
-
     const habit = await prisma.habit.create({
-      data: {
-        name,
-        targetPerWeek: targetPerWeek ?? 7,
-        userId: req.userId!,
-      },
+      data: { name, targetPerWeek: targetPerWeek ?? 7, userId: req.userId! },
     });
-
     res.status(201).json({ ...habit, completedToday: false, streak: 0, maxStreak: 0 });
   } catch {
     res.status(500).json({ error: 'Error al crear hábito' });
@@ -108,18 +99,13 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
 router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-
-    const habit = await prisma.habit.findFirst({
-      where: { id, userId: req.userId! },
-    });
+    const habit = await prisma.habit.findFirst({ where: { id, userId: req.userId! } });
     if (!habit) {
       res.status(404).json({ error: 'Hábito no encontrado' });
       return;
     }
-
     await prisma.habitCompletion.deleteMany({ where: { habitId: id } });
     await prisma.habit.delete({ where: { id } });
-
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Error al eliminar hábito' });
@@ -130,21 +116,16 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 router.post('/:id/complete', authenticate, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const today = startOfDay(new Date());
+    const today = parseLocalDate(req.body.localDate);
 
-    const habit = await prisma.habit.findFirst({
-      where: { id, userId: req.userId! },
-    });
+    const habit = await prisma.habit.findFirst({ where: { id, userId: req.userId! } });
     if (!habit) {
       res.status(404).json({ error: 'Hábito no encontrado' });
       return;
     }
 
     const existing = await prisma.habitCompletion.findFirst({
-      where: {
-        habitId: id,
-        date: { gte: today, lte: endOfDay(new Date()) },
-      },
+      where: { habitId: id, date: { gte: startOfDay(today), lte: endOfDay(today) } },
     });
     if (existing) {
       res.status(409).json({ error: 'Ya completado hoy' });
@@ -152,9 +133,8 @@ router.post('/:id/complete', authenticate, async (req: AuthRequest, res) => {
     }
 
     const completion = await prisma.habitCompletion.create({
-      data: { habitId: id, date: today },
+      data: { habitId: id, date: startOfDay(today) },
     });
-
     res.status(201).json(completion);
   } catch {
     res.status(500).json({ error: 'Error al completar hábito' });
@@ -165,23 +145,17 @@ router.post('/:id/complete', authenticate, async (req: AuthRequest, res) => {
 router.delete('/:id/complete', authenticate, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const today = new Date();
+    const today = parseLocalDate(req.query.localDate as string | undefined);
 
-    const habit = await prisma.habit.findFirst({
-      where: { id, userId: req.userId! },
-    });
+    const habit = await prisma.habit.findFirst({ where: { id, userId: req.userId! } });
     if (!habit) {
       res.status(404).json({ error: 'Hábito no encontrado' });
       return;
     }
 
     await prisma.habitCompletion.deleteMany({
-      where: {
-        habitId: id,
-        date: { gte: startOfDay(today), lte: endOfDay(today) },
-      },
+      where: { habitId: id, date: { gte: startOfDay(today), lte: endOfDay(today) } },
     });
-
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Error al desmarcar hábito' });

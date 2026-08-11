@@ -73,8 +73,13 @@ export async function deleteEntry(id: string): Promise<void> {
 }
 
 // Habits
+function localDateStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export async function fetchHabits(): Promise<Habit[]> {
-  const { data } = await http.get('/habits');
+  const { data } = await http.get('/habits', { params: { localDate: localDateStr() } });
   return data;
 }
 
@@ -87,11 +92,11 @@ export async function createHabit(body: {
 }
 
 export async function completeHabit(id: string): Promise<void> {
-  await http.post(`/habits/${id}/complete`);
+  await http.post(`/habits/${id}/complete`, { localDate: localDateStr() });
 }
 
 export async function uncompleteHabit(id: string): Promise<void> {
-  await http.delete(`/habits/${id}/complete`);
+  await http.delete(`/habits/${id}/complete`, { params: { localDate: localDateStr() } });
 }
 
 export async function deleteHabit(id: string): Promise<void> {
