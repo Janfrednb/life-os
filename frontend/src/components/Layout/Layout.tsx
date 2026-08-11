@@ -20,7 +20,10 @@ export function Layout({ children }: Props) {
   return (
     <div className="min-h-screen bg-bg-0 text-text-base font-sans">
       {/* Top Nav */}
-      <nav className="sticky top-0 z-20 bg-bg-0/90 backdrop-blur border-b border-bg-2">
+      <nav
+        className="sticky top-0 z-20 bg-bg-0/90 backdrop-blur border-b border-bg-2"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-green font-mono font-semibold text-lg tracking-tight">

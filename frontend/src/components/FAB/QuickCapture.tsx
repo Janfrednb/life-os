@@ -157,6 +157,7 @@ export function QuickCapture() {
             <form
               onSubmit={handleSubmit}
               className="bg-bg-1 border border-bg-3 rounded-t-2xl p-5 space-y-5"
+              style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-text-base font-semibold text-base">Captura rápida</h2>
@@ -301,7 +302,8 @@ export function QuickCapture() {
         onClick={() => setOpen(true)}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
-        className="fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full bg-green text-bg-0 shadow-lg shadow-green/30 flex items-center justify-center text-2xl font-light transition-shadow hover:shadow-green/50"
+        className="fixed right-6 z-50 w-14 h-14 rounded-full bg-green text-bg-0 shadow-lg shadow-green/30 flex items-center justify-center text-2xl font-light transition-shadow hover:shadow-green/50"
+        style={{ bottom: 'calc(4.5rem + env(safe-area-inset-bottom))' }}
         aria-label="Captura rápida"
       >
         +
