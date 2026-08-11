@@ -40,13 +40,20 @@ export function Layout({ children }: Props) {
       </nav>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6 pb-36">{children}</main>
+      <main
+        className="max-w-2xl mx-auto px-4 py-6"
+        style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom))' }}
+      >
+        {children}
+      </main>
 
       {/* FAB */}
       <QuickCapture />
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-bg-0/95 backdrop-blur border-t border-bg-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-bg-0/95 backdrop-blur border-t border-bg-2"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         <div className="max-w-2xl mx-auto flex">
           {NAV_ITEMS.map(({ to, label, icon }) => (
             <NavLink
