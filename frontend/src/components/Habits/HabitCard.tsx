@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import type { Habit } from '../../types';
 import { useToggleHabit } from '../../hooks/useHabits';
-import { ContributionsGrid } from './ContributionsGrid';
+import { HabitMonthCalendar } from './HabitMonthCalendar';
 
 interface Props {
   habit: Habit;
@@ -85,8 +85,8 @@ export function HabitCard({ habit }: Props) {
         </span>
       </div>
 
-      {/* Contributions grid */}
-      <ContributionsGrid completions={habit.completions} />
+      {/* Calendario mensual */}
+      <HabitMonthCalendar completions={habit.completions} />
     </div>
   );
 }
