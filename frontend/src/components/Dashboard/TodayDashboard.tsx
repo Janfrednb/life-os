@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { MoodCard } from './MoodCard';
 import { HabitsCard } from './HabitsCard';
 import { PendingCard } from './PendingCard';
+import { MoodHabitCorrelationCard } from './MoodHabitCorrelationCard';
 import { useTodayEntries } from '../../hooks/useEntries';
 
 const container = {
@@ -62,6 +63,9 @@ export function TodayDashboard() {
         </motion.div>
         <motion.div variants={card}>
           <HabitsCard />
+        </motion.div>
+        <motion.div variants={card} className="md:col-span-2">
+          <MoodHabitCorrelationCard />
         </motion.div>
         <motion.div variants={card} className="md:col-span-2">
           <PendingCard />
