@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -24,10 +24,40 @@ export function KanbanPage() {
   const { data: entries, isLoading } = useEntries({ type: 'PENDIENTE_TRABAJO' });
   const updateEntry = useUpdateEntry();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeCol, setActiveCol] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
+
+  // En mobile las columnas ocupan casi todo el ancho y se navegan por swipe;
+  // esto detecta cuál está centrada para resaltar el punto correspondiente.
+  function handleScroll() {
+    const row = scrollRef.current?.firstElementChild;
+    if (!row) return;
+    const columns = Array.from(row.children) as HTMLElement[];
+    const container = scrollRef.current!;
+    const containerCenter = container.scrollLeft + container.clientWidth / 2;
+
+    let closest = 0;
+    let minDist = Infinity;
+    columns.forEach((col, i) => {
+      const center = col.offsetLeft + col.offsetWidth / 2;
+      const dist = Math.abs(center - containerCenter);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    });
+    setActiveCol(closest);
+  }
+
+  function scrollToCol(i: number) {
+    const row = scrollRef.current?.firstElementChild;
+    const col = row?.children[i] as HTMLElement | undefined;
+    col?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
@@ -92,7 +122,11 @@ export function KanbanPage() {
             onDragEnd={handleDragEnd}
             onDragCancel={() => setActiveId(null)}
           >
-            <div className="overflow-x-auto pb-4 -mx-4 px-4">
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scroll-px-4"
+            >
               <div className="flex gap-4 w-max">
                 {COLUMNS.map((col) => (
                   <KanbanColumn
@@ -105,6 +139,22 @@ export function KanbanPage() {
                 ))}
               </div>
             </div>
+
+            {/* Indicador de columna, solo en mobile */}
+            <div className="flex justify-center gap-1.5 sm:hidden -mt-2">
+              {COLUMNS.map((col, i) => (
+                <button
+                  key={col.id}
+                  type="button"
+                  onClick={() => scrollToCol(i)}
+                  aria-label={`Ir a ${col.title}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    activeCol === i ? 'w-5 bg-green' : 'w-1.5 bg-bg-3'
+                  }`}
+                />
+              ))}
+            </div>
+
             <DragOverlay>
               {activeEntry && <KanbanCardContent entry={activeEntry} floating />}
             </DragOverlay>
