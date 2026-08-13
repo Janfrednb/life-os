@@ -49,7 +49,7 @@ export function MoodSlider({ value, onChange }: Props) {
           onChange={(e) => onChange(Number(e.target.value))}
           className="mood-slider w-full h-2 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #22c55e ${((value - 1) / 4) * 100}%, #1f2d1f ${((value - 1) / 4) * 100}%)`,
+            background: `linear-gradient(to right, rgb(var(--color-green)) ${((value - 1) / 4) * 100}%, rgb(var(--color-bg-3)) ${((value - 1) / 4) * 100}%)`,
           }}
         />
         <div className="flex justify-between mt-1.5">

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { QuickCapture } from '../FAB/QuickCapture';
 
 interface Props {
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
 
 export function Layout({ children }: Props) {
   const { user, logout } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
 
   return (
     <div className="min-h-screen bg-bg-0 text-text-base font-sans">
@@ -32,6 +34,13 @@ export function Layout({ children }: Props) {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-text-muted text-sm hidden sm:block">{user?.name}</span>
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-text-dim hover:text-text-muted hover:bg-bg-2 transition-colors"
+            >
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
             <button
               onClick={logout}
               className="text-text-dim text-xs hover:text-text-muted transition-colors border border-bg-3 rounded-lg px-2.5 py-1"

@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Entry } from '../../types';
 import { KanbanCard } from './KanbanCard';
 
@@ -26,15 +27,30 @@ export function KanbanColumn({ id, title, accent, entries }: Props) {
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex flex-col gap-2 min-h-[120px] rounded-2xl p-3 transition-colors ${
-          isOver ? 'bg-bg-3' : 'bg-bg-1'
-        } border border-bg-3`}
+        className={`flex flex-col gap-2 min-h-[120px] rounded-2xl p-3 border transition-all duration-150 ${
+          isOver ? 'bg-bg-3 border-green/50 scale-[1.02]' : 'bg-bg-1 border-bg-3'
+        }`}
       >
-        {entries.map((e) => (
-          <KanbanCard key={e.id} entry={e} />
-        ))}
+        <AnimatePresence>
+          {entries.map((e) => (
+            <motion.div
+              key={e.id}
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.18 }}
+            >
+              <KanbanCard entry={e} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {entries.length === 0 && (
-          <div className="flex-1 flex items-center justify-center text-text-dim text-xs py-4">
+          <div
+            className={`flex-1 flex items-center justify-center text-xs py-4 transition-colors ${
+              isOver ? 'text-green' : 'text-text-dim'
+            }`}
+          >
             Suelta aqui
           </div>
         )}

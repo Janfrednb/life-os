@@ -1,5 +1,4 @@
 import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import type { Entry, PendienteMeta } from '../../types';
 
 interface Props {
@@ -17,26 +16,21 @@ function daysLeft(fecha?: string): number | null {
   return Math.ceil((new Date(fecha).getTime() - Date.now()) / 86_400_000);
 }
 
-export function KanbanCard({ entry }: Props) {
+interface ContentProps {
+  entry: Entry;
+  floating?: boolean;
+}
+
+export function KanbanCardContent({ entry, floating = false }: ContentProps) {
   const meta = entry.metadata as PendienteMeta | null;
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: entry.id });
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.4 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab',
-  };
-
   const days = daysLeft(meta?.fechaLimite);
   const prioridad = meta?.prioridad ?? 'baja';
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-bg-0 border border-bg-3 rounded-xl p-3 flex flex-col gap-2 select-none touch-none"
+      className={`bg-bg-0 border rounded-xl p-3 flex flex-col gap-2 select-none ${
+        floating ? 'border-green/40 shadow-xl shadow-black/30 rotate-2 scale-105' : 'border-bg-3'
+      }`}
     >
       <p className="text-sm text-text-base leading-snug">{entry.content}</p>
 
@@ -57,6 +51,35 @@ export function KanbanCard({ entry }: Props) {
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+// La tarjeta arrastrable deja un hueco punteado en su lugar mientras se
+// arrastra: el clon flotante que sigue al cursor lo dibuja el DragOverlay
+// en Kanban.tsx, así evitamos que la misma tarjeta se vea duplicada.
+export function KanbanCard({ entry }: Props) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: entry.id });
+
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        className="rounded-xl border-2 border-dashed border-bg-4 min-h-[68px]"
+      />
+    );
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="cursor-grab active:cursor-grabbing touch-none"
+    >
+      <KanbanCardContent entry={entry} />
     </div>
   );
 }

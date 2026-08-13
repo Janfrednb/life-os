@@ -1,7 +1,17 @@
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { Layout } from '../components/Layout/Layout';
 import { useEntries, useUpdateEntry } from '../hooks/useEntries';
 import { KanbanColumn } from '../components/Kanban/KanbanColumn';
+import { KanbanCardContent } from '../components/Kanban/KanbanCard';
 import type { PendienteMeta, TaskStatus } from '../types';
 
 const COLUMNS: { id: TaskStatus; title: string; accent: string }[] = [
@@ -13,12 +23,18 @@ const COLUMNS: { id: TaskStatus; title: string; accent: string }[] = [
 export function KanbanPage() {
   const { data: entries, isLoading } = useEntries({ type: 'PENDIENTE_TRABAJO' });
   const updateEntry = useUpdateEntry();
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || !entries) return;
 
@@ -43,6 +59,7 @@ export function KanbanPage() {
 
   const totalDone = byStatus('DONE').length;
   const total = entries?.length ?? 0;
+  const activeEntry = entries?.find((e) => e.id === activeId) ?? null;
 
   return (
     <Layout>
@@ -69,7 +86,12 @@ export function KanbanPage() {
         )}
 
         {!isLoading && total > 0 && (
-          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveId(null)}
+          >
             <div className="overflow-x-auto pb-4 -mx-4 px-4">
               <div className="flex gap-4 w-max">
                 {COLUMNS.map((col) => (
@@ -83,6 +105,9 @@ export function KanbanPage() {
                 ))}
               </div>
             </div>
+            <DragOverlay>
+              {activeEntry && <KanbanCardContent entry={activeEntry} floating />}
+            </DragOverlay>
           </DndContext>
         )}
       </div>

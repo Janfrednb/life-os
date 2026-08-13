@@ -9,6 +9,10 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { Entry, MoodMeta } from '../../types';
+import { useThemeStore } from '../../store/themeStore';
+
+const GRID_COLOR = { dark: '#1f2d1f', light: '#d3e0d3' };
+const TICK_COLOR = { dark: '#3d5c3d', light: '#8fa88f' };
 
 interface DataPoint {
   date: string;
@@ -85,6 +89,9 @@ interface Props {
 
 export function MoodChart({ entries }: Props) {
   const data = buildData(entries);
+  const theme = useThemeStore((s) => s.theme);
+  const gridColor = GRID_COLOR[theme];
+  const tickColor = TICK_COLOR[theme];
 
   if (data.length === 0) {
     return (
@@ -97,10 +104,10 @@ export function MoodChart({ entries }: Props) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1f2d1f" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
         <XAxis
           dataKey="date"
-          tick={{ fill: '#3d5c3d', fontSize: 10 }}
+          tick={{ fill: tickColor, fontSize: 10 }}
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
@@ -108,17 +115,17 @@ export function MoodChart({ entries }: Props) {
         <YAxis
           domain={[1, 5]}
           ticks={[1, 2, 3, 4, 5]}
-          tick={{ fill: '#3d5c3d', fontSize: 10 }}
+          tick={{ fill: tickColor, fontSize: 10 }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v) => MOOD_LABEL[v]?.[0] ?? v}
         />
-        <ReferenceLine y={3} stroke="#1f2d1f" strokeDasharray="4 4" />
-        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#263826', strokeWidth: 1 }} />
+        <ReferenceLine y={3} stroke={gridColor} strokeDasharray="4 4" />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgb(var(--color-bg-4))', strokeWidth: 1 }} />
         <Line
           type="monotone"
           dataKey="value"
-          stroke="#22c55e"
+          stroke="rgb(var(--color-green))"
           strokeWidth={2}
           dot={<CustomDot />}
           activeDot={false}
