@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { HabitCompletion } from '../../types';
+import { localDayKey, habitCompletionDayKey } from '../../lib/dates';
 
 interface Props {
   completions: HabitCompletion[];
@@ -11,21 +12,11 @@ const MONTH_LABELS = [
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];
 
-function pad(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
 function localKey(y: number, m: number, d: number): string {
-  return `${y}-${pad(m + 1)}-${pad(d)}`;
+  return localDayKey(new Date(y, m, d));
 }
 
-// El backend guarda cada completado como medianoche UTC representando el día
-// local del usuario (ver fix de timezone), así que lo leemos con getters UTC
-// para recuperar ese mismo día de calendario sin importar la zona del viewer.
-function completionKey(dateStr: string): string {
-  const d = new Date(dateStr);
-  return localKey(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-}
+const completionKey = habitCompletionDayKey;
 
 interface Cell {
   day: number;

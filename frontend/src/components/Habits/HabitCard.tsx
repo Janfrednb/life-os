@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import type { Habit } from '../../types';
 import { useToggleHabit } from '../../hooks/useHabits';
 import { HabitMonthCalendar } from './HabitMonthCalendar';
+import { localDayKey, habitCompletionDayKey, startOfWeek } from '../../lib/dates';
 
 interface Props {
   habit: Habit;
@@ -13,6 +14,16 @@ function shouldShowReminder(habit: Habit): boolean {
   if (habit.completedToday) return false;
   const now = new Date();
   return now.getHours() >= 20;
+}
+
+function weeklyCompletionCount(habit: Habit): number {
+  const today = new Date();
+  const weekStartKey = localDayKey(startOfWeek(today));
+  const todayKey = localDayKey(today);
+  return habit.completions.filter((c) => {
+    const key = habitCompletionDayKey(c.date);
+    return key >= weekStartKey && key <= todayKey;
+  }).length;
 }
 
 export function HabitCard({ habit }: Props) {
@@ -36,6 +47,9 @@ export function HabitCard({ habit }: Props) {
   }
 
   const reminder = shouldShowReminder(habit);
+  const weekCount = weeklyCompletionCount(habit);
+  const weekGoalMet = weekCount >= habit.targetPerWeek;
+  const weekPct = Math.min(100, (weekCount / habit.targetPerWeek) * 100);
 
   return (
     <div className="bg-bg-1 border border-bg-3 rounded-2xl p-4 flex flex-col gap-3">
@@ -80,9 +94,22 @@ export function HabitCard({ habit }: Props) {
             {' '}max
           </span>
         </span>
-        <span className="ml-auto text-text-dim">
-          {habit.targetPerWeek}x/sem
-        </span>
+      </div>
+
+      {/* Progreso semanal */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-text-dim">Esta semana</span>
+          <span className={`font-mono font-medium ${weekGoalMet ? 'text-green' : 'text-text-muted'}`}>
+            {weekCount}/{habit.targetPerWeek}
+          </span>
+        </div>
+        <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${weekGoalMet ? 'bg-green' : 'bg-green-dim'}`}
+            style={{ width: `${weekPct}%` }}
+          />
+        </div>
       </div>
 
       {/* Calendario mensual */}

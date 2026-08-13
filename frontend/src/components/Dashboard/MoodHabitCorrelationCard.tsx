@@ -2,25 +2,11 @@ import { useMemo } from 'react';
 import { useHabits } from '../../hooks/useHabits';
 import { useEntries } from '../../hooks/useEntries';
 import type { MoodMeta } from '../../types';
+import { localDayKey, habitCompletionDayKey as habitDayKey } from '../../lib/dates';
 
 const WINDOW_DAYS = 60;
 const MIN_POINTS = 6;
 const MIN_GROUP = 3;
-
-function pad(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
-function localDayKey(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-// Los completados de hábitos se guardan como medianoche UTC representando el
-// día local del usuario (ver fix de timezone), así que se leen con getters UTC.
-function habitDayKey(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-}
 
 interface DayPoint {
   key: string;
